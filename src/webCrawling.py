@@ -24,7 +24,7 @@ def encontrar_links_categorias(URL_BASE):
     
     listaLinksCategorias = []
     for a in links:
-        
+        # exemplo de retorno = catalogue/category/books/travel_2/index.html
         url_rel = a['href']
         #adiciona a url total na lista de links para as cetegorias
         listaLinksCategorias.append(URL_BASE + url_rel)
@@ -96,7 +96,8 @@ def navegar_paginas_livros(URL_BASE, categoriaLink):
         htmlCategoria = urlopen(reqCategoria).read()
         time.sleep(2)
         bsCategoria = BeautifulSoup(htmlCategoria, "html.parser")
-            
+
+        print(f"URL ATUAL -> {categoriaLink}")    
         livros = bsCategoria.find_all('article', class_="product_pod")
         lista_links_absolutos = []
         for l in livros:
@@ -104,16 +105,17 @@ def navegar_paginas_livros(URL_BASE, categoriaLink):
             link_relativo = a['href']
             lista_links_absolutos.append(link_relativo)
 
-        # ve se tem paginação ou não, se tiver cai em um caso recursivo
-        next = bsCategoria.find('a', string="next")
-        if next:
-            print("proxima pagina")
-        else:
-            print("acabou")
+        # ve se tem paginação e
+        #troca o link da página da categoria atual pela sua próxima trocando o html
+        next_li = bsCategoria.find('li', class_="next")
+        if next_li:
+            proxima = next_li.find('a')['href']
+            proximaPagina = re.sub(r"[^/]+\.html$", proxima, categoriaLink)
+            lista_links_absolutos += navegar_paginas_livros(URL_BASE, proximaPagina)
 
         return lista_links_absolutos
         
     except URLError as e:
         print(f"erro ao acessar URL da categoria: {e}")  
-        
+        return []
         
